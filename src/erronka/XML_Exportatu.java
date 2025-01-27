@@ -58,8 +58,8 @@ public class XML_Exportatu {
             
             for (int i = 0; i < kanpinaNode.getLength(); i++) {
                 Element element = (Element) kanpinaNode.item(i);
-                
-                pstmt.setString(1, element.getAttribute("num"));
+
+                pstmt.setString(1, element.getElementsByTagName("signatura").item(0).getTextContent());
                 pstmt.setString(2, element.getElementsByTagName("documentName").item(0).getTextContent());
                 pstmt.setString(3, element.getElementsByTagName("documentDescription").item(0).getTextContent());
                 pstmt.setString(4, element.getElementsByTagName("country").item(0).getTextContent());
@@ -78,7 +78,6 @@ public class XML_Exportatu {
                 pstmt.setString(17, element.getElementsByTagName("metadataXML").item(0).getTextContent());
                 pstmt.setString(18, element.getElementsByTagName("zipFile").item(0).getTextContent());
 
-                
                 pstmt.executeUpdate();
             }
             pstmt.close();
