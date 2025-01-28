@@ -22,21 +22,7 @@ public class XML_Exportatu {
             
             NodeList kanpinaNode = doc.getElementsByTagName("row");
             Connection conn = DB.getConnection();
-            
-            String queryProbintzia = "INSERT INTO PROBINTZIAK (KODEA, IZENA) VALUES (?, ?)";
-            PreparedStatement pstmtProbintzia = conn.prepareStatement(queryProbintzia);
-            
-            for (int i = 0; i < kanpinaNode.getLength(); i++) {
-                Element element = (Element) kanpinaNode.item(i);
-                
-                
-                pstmtProbintzia.setString(1, element.getElementsByTagName("territorycode").item(0).getTextContent());
-                pstmtProbintzia.setString(2, element.getElementsByTagName("territory").item(0).getTextContent());
-                
-                pstmtProbintzia.executeUpdate();
-            }
-            
-            pstmtProbintzia.close();
+            conn.setAutoCommit(false);
             
             String queryHerria = "INSERT INTO HERRIAK (KODEA, IZENA) VALUES (?, ?)";
             PreparedStatement pstmtHerria = conn.prepareStatement(queryHerria);
@@ -52,6 +38,21 @@ public class XML_Exportatu {
             }
             
             pstmtHerria.close();
+            
+            String queryProbintzia = "INSERT INTO PROBINTZIAK (KODEA, IZENA) VALUES (?, ?)";
+            PreparedStatement pstmtProbintzia = conn.prepareStatement(queryProbintzia);
+            
+            for (int i = 0; i < kanpinaNode.getLength(); i++) {
+                Element element = (Element) kanpinaNode.item(i);
+                
+                
+                pstmtProbintzia.setString(1, element.getElementsByTagName("territorycode").item(0).getTextContent());
+                pstmtProbintzia.setString(2, element.getElementsByTagName("territory").item(0).getTextContent());
+                
+                pstmtProbintzia.executeUpdate();
+            }
+            
+            pstmtProbintzia.close();
             
             String queryKanpinak = "INSERT INTO KANPINAK (KODEA, IZENA, DESKRIBAPENA, KOKALEKUA, TELEFONOA, HELBIDEA, EMAILA, WEBGUNEA, KATEGORIA, EDUKIERA, POSTAKODEA, HERRI_KODEA, PROBINTZIA_KODEA, FRIENDLY_URL, PHYSICAL_URL, DATA_XML, METADATA_XML, ZIP_FILE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement pstmt = conn.prepareStatement(queryKanpinak);
@@ -79,13 +80,30 @@ public class XML_Exportatu {
                 pstmt.setString(18, element.getElementsByTagName("zipFile").item(0).getTextContent());
 
                 pstmt.executeUpdate();
+                
             }
+            
+            String queryEtiketak = "INSERT INTO ETIKETAK (ETIKETA) VALUES (?)";
+            PreparedStatement pstmtEtiketak = conn.prepareStatement(queryEtiketak);
+            
+            for (int i = 0; i < kanpinaNode.getLength(); i++) {
+                Element element = (Element) kanpinaNode.item(i);
+                
+                
+                pstmtEtiketak.setString(1, element.getElementsByTagName("territorycode").item(0).getTextContent());
+                
+                pstmtEtiketak.executeUpdate();
+            }
+            
+            pstmtEtiketak.close();
             pstmt.close();
             conn.close();
             System.out.println("Datuak ondo exportatu dira.");
             
         } catch (Exception e) {
             e.printStackTrace();
+            //conn.rollback();
+            System.out.println("Errore bat egon da, rollback egiten.");
         }
     }
 }

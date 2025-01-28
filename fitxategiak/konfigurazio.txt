@@ -1,4 +1,3 @@
-XML = "/Erronka/fitxategiak/konfigurazio.txt"
-URL= "jdbc:oracle://localhost:1521:xe/EUSKANP",
-USER = "EUSKANP",
-PASSWORD = "EUSKANP",
+jdbc:oracle://localhost:1521:xe/EUSKANP
+EUSKANP
+EUSKANP
