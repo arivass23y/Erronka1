@@ -1,10 +1,8 @@
 package erronka;
 
-import java.sql.SQLException;
-
 public class Main {
-	public static void main(String[] args) throws SQLException {
+	public static void main(String[] args) throws NumberFormatException, Exception {
 		XML_Inportatu xmlInportatu = new XML_Inportatu();
-		xmlInportatu.Inportazioa();
+		xmlInportatu.Inportazioak();
 	}
 }
