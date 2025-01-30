@@ -1,3 +1,4 @@
-jdbc:oracle://localhost:1521:xe/EUSKANP
-EUSKANP
-EUSKANP
+URL=jdbc:oracle:thin:@//localhost:1521/xepdb1
+USER=EUSKANP
+PASSWORD=EUSKANP
+XML=fitxategiak/3PAG2_E1_kanpinak.xml

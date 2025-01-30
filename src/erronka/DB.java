@@ -5,12 +5,14 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DB {
+
+	public static Connection konektatu() throws SQLException {
+		KonfKargatu konfigurazioa = new KonfKargatu();
+		String url = konfigurazioa.getURL();
+		String user = konfigurazioa.getUSER();
+		String password = konfigurazioa.getPASSWORD();
+		
+		return DriverManager.getConnection(url, user, password);
+	}
 	
-    private static String URL = "jdbc:oracle:thin:@localhost:1521:xe";
-    private static String USER = "EUSKANP";
-    private static String PASSWORD = "EUSKANP";
-    
-    public static Connection getConnection() throws SQLException {
-        return DriverManager.getConnection(URL, USER, PASSWORD);
-    }
 }

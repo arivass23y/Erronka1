@@ -1,109 +1,71 @@
 package erronka;
 
 import java.io.File;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
 
 public class XML_Exportatu {
 	
-	public void Exportazioa() {
-        
-        try {
-            File file = new File("fitxategiak/3PAG2_E1_kanpinak.xml");
-            DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
-            Document doc = dBuilder.parse(file);
-            doc.getDocumentElement().normalize();
-            
-            NodeList kanpinaNode = doc.getElementsByTagName("row");
-            Connection conn = DB.getConnection();
-            conn.setAutoCommit(false);
-            
-            String queryHerria = "INSERT INTO HERRIAK (KODEA, IZENA) VALUES (?, ?)";
-            PreparedStatement pstmtHerria = conn.prepareStatement(queryHerria);
-            
-            for (int i = 0; i < kanpinaNode.getLength(); i++) {
-                Element element = (Element) kanpinaNode.item(i);
-                
-                
-                pstmtHerria.setString(1, element.getElementsByTagName("municipalitycode").item(0).getTextContent());
-                pstmtHerria.setString(2, element.getElementsByTagName("municipality").item(0).getTextContent());
-                
-                pstmtHerria.executeUpdate();
-            }
-            
-            pstmtHerria.close();
-            
-            String queryProbintzia = "INSERT INTO PROBINTZIAK (KODEA, IZENA) VALUES (?, ?)";
-            PreparedStatement pstmtProbintzia = conn.prepareStatement(queryProbintzia);
-            
-            for (int i = 0; i < kanpinaNode.getLength(); i++) {
-                Element element = (Element) kanpinaNode.item(i);
-                
-                
-                pstmtProbintzia.setString(1, element.getElementsByTagName("territorycode").item(0).getTextContent());
-                pstmtProbintzia.setString(2, element.getElementsByTagName("territory").item(0).getTextContent());
-                
-                pstmtProbintzia.executeUpdate();
-            }
-            
-            pstmtProbintzia.close();
-            
-            String queryKanpinak = "INSERT INTO KANPINAK (KODEA, IZENA, DESKRIBAPENA, KOKALEKUA, TELEFONOA, HELBIDEA, EMAILA, WEBGUNEA, KATEGORIA, EDUKIERA, POSTAKODEA, HERRI_KODEA, PROBINTZIA_KODEA, FRIENDLY_URL, PHYSICAL_URL, DATA_XML, METADATA_XML, ZIP_FILE) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(queryKanpinak);
-            
-            for (int i = 0; i < kanpinaNode.getLength(); i++) {
-                Element element = (Element) kanpinaNode.item(i);
+	public void datuakInportatu() {
+		
+	}
+	
+	public void toXML() {
+	    try {
+	        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
+	        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
+	        Document doc = docBuilder.newDocument();
 
-                pstmt.setString(1, element.getElementsByTagName("signatura").item(0).getTextContent());
-                pstmt.setString(2, element.getElementsByTagName("documentName").item(0).getTextContent());
-                pstmt.setString(3, element.getElementsByTagName("documentDescription").item(0).getTextContent());
-                pstmt.setString(4, element.getElementsByTagName("country").item(0).getTextContent());
-                pstmt.setString(5, element.getElementsByTagName("phone").item(0).getTextContent());
-                pstmt.setString(6, element.getElementsByTagName("address").item(0).getTextContent());
-                pstmt.setString(7, element.getElementsByTagName("tourismEmail").item(0).getTextContent());
-                pstmt.setString(8, element.getElementsByTagName("web").item(0).getTextContent());
-                pstmt.setString(9, element.getElementsByTagName("category").item(0).getTextContent());
-                pstmt.setInt(10, Integer.parseInt(element.getElementsByTagName("capacity").item(0).getTextContent()));
-                pstmt.setString(11, element.getElementsByTagName("postalCode").item(0).getTextContent());
-                pstmt.setInt(12, Integer.parseInt(element.getElementsByTagName("municipalitycode").item(0).getTextContent()));
-                pstmt.setInt(13, Integer.parseInt(element.getElementsByTagName("territorycode").item(0).getTextContent()));
-                pstmt.setString(14, element.getElementsByTagName("friendlyUrl").item(0).getTextContent());
-                pstmt.setString(15, element.getElementsByTagName("physicalUrl").item(0).getTextContent());
-                pstmt.setString(16, element.getElementsByTagName("dataXML").item(0).getTextContent());
-                pstmt.setString(17, element.getElementsByTagName("metadataXML").item(0).getTextContent());
-                pstmt.setString(18, element.getElementsByTagName("zipFile").item(0).getTextContent());
+	        // EL TOCHO, LA RAIZ, ES HIJO DE DOC, EL DOCUMENTO, POR ESO ES APPEND CHILD
+	        Element raiz = doc.createElement("liburutegia");
+	        doc.appendChild(raiz);
 
-                pstmt.executeUpdate();
-                
-            }
-            
-            String queryEtiketak = "INSERT INTO ETIKETAK (ETIKETA) VALUES (?)";
-            PreparedStatement pstmtEtiketak = conn.prepareStatement(queryEtiketak);
-            
-            for (int i = 0; i < kanpinaNode.getLength(); i++) {
-                Element element = (Element) kanpinaNode.item(i);
-                
-                
-                pstmtEtiketak.setString(1, element.getElementsByTagName("territorycode").item(0).getTextContent());
-                
-                pstmtEtiketak.executeUpdate();
-            }
-            
-            pstmtEtiketak.close();
-            pstmt.close();
-            conn.close();
-            System.out.println("Datuak ondo exportatu dira.");
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-            //conn.rollback();
-            System.out.println("Errore bat egon da, rollback egiten.");
-        }
+	        for (int i = 0; i < this.liburuak.length; i++) {
+	            // CREAMOS OTRO ELEMENTO, EN ESTE CASO TIENE ATRIBUTO ID <liburua id = "x">
+	            Element liburua = doc.createElement("liburua");
+	            liburua.setAttribute("id", this.liburuak[i].getId());
+	            raiz.appendChild(liburua);
+
+	            // AÑADE ELEMENTOS SIMPLES A <liburua>
+	            addElementWithText(doc, liburua, "Izenburua", this.liburuak[i].getIzenburua());
+	            addElementWithText(doc, liburua, "Urtea", this.liburuak[i].getUrtea());
+	            addElementWithText(doc, liburua, "Generoa", this.liburuak[i].getGeneroa());
+
+	            // Create <idazlea> node and add it to <liburua>
+	            //SE HACE DISTINTO A LOS DE ARRIBA POR NO SER UN ELEMENTO, SI NO UN NODO
+	            Element idazlea = doc.createElement("idazlea");
+	            liburua.appendChild(idazlea);
+
+	            // IGUAL QUE LOS DE ARRIBA PERO EN EL NODO IDAZLEA
+	            addElementWithText(doc, idazlea, "IdazleIzena", this.liburuak[i].getIdazlea().getIzena());
+	            addElementWithText(doc, idazlea, "IdazleAbizena", this.liburuak[i].getIdazlea().getAbizena());
+	        }
+
+	        TransformerFactory transformerFactory = TransformerFactory.newInstance();
+	        Transformer transformer = transformerFactory.newTransformer();
+	        DOMSource source = new DOMSource(doc);
+	        StreamResult result = new StreamResult(new File("sortutako_fitx\\CSV-a pasatuta.xml"));
+	        //Linea magica
+	        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+	        transformer.transform(source, result);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	//PARA AÑADIR DIRECTAMENTE EL ELEMENTO DENTRO DE UN NODO, CON TEXTO Y TODO
+	private static void addElementWithText(Document doc, Element parent, String tagName, String textContent) {
+        Element element = doc.createElement(tagName);
+        element.setTextContent(textContent);
+        parent.appendChild(element); // Atributu gurasoari gehitzen zaio
     }
 }
