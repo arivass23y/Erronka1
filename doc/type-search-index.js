@@ -1,0 +1,1 @@
+typeSearchIndex = [{"l":"All Classes and Interfaces","u":"allclasses-index.html"},{"p":"erronka","l":"CSV_Exportatu"},{"p":"erronka","l":"DB"},{"p":"erronka","l":"KonfKargatu"},{"p":"erronka","l":"Main"},{"p":"erronka","l":"XML_Exportatu"},{"p":"erronka","l":"XML_Inportatu"}];updateSearchResults();
