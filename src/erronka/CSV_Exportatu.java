@@ -15,11 +15,12 @@ public class CSV_Exportatu {
 		conn = DB.konektatu();
 	}
 
-	public void csvExportazioa() {
+	public void csvExportazioa(String probintziaIzena) {
 		// Erabiliko ditugun query-a datu baseko datuak jasotzeko
 		String query = "SELECT K.KODEA, K.IZENA, K.KOKALEKUA, K.HELBIDEA, K.POSTAKODEA, "
 				+ "H.IZENA AS HERRIA, P.IZENA AS PROBINTZIA, K.KATEGORIA, K.EDUKIERA " + "FROM KANPINAK K "
-				+ "JOIN HERRIAK H ON K.HERRI_KODEA = H.KODEA " + "JOIN PROBINTZIAK P ON K.PROBINTZIA_KODEA = P.KODEA";
+				+ "JOIN HERRIAK H ON K.HERRI_KODEA = H.KODEA " + "JOIN PROBINTZIAK P ON K.PROBINTZIA_KODEA = P.KODEA "
+				+ "WHERE P.IZENA = '" + probintziaIzena + "'";
 
 		// Konexia irekitzen saiatzen dugu
 		try (Statement statement = conn.createStatement();

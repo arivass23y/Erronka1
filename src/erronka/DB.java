@@ -11,8 +11,8 @@ public class DB {
 		String url = konfigurazioa.getURL();
 		String user = konfigurazioa.getUSER();
 		String password = konfigurazioa.getPASSWORD();
-		
+
 		return DriverManager.getConnection(url, user, password);
 	}
-	
+
 }
