@@ -139,7 +139,7 @@ public class XML_Inportatu {
 			conn.close();
 
 		} catch (Exception e) {
-			System.out.println("Errorea KANPINAK tablan datuak sartzerakoan.");
+			System.out.println("Errorea KANPINAK taulan datuak sartzerakoan.");
 		}
 	}
 
@@ -164,7 +164,7 @@ public class XML_Inportatu {
 				
 				String etiketaIzena = element.getElementsByTagName("templateType").item(0).getTextContent();
 				
-				if (!etiketaKonfirmatu(conn, etiketaIzena)) {
+				if (etiketaKonfirmatu(conn, etiketaIzena)) {
 					pstmt.setString(1, getElementText(element, etiketaIzena));
 					pstmt.executeUpdate();
 				}
@@ -176,7 +176,7 @@ public class XML_Inportatu {
 			conn.close();
 
 		} catch (Exception e) {
-			System.out.println("Errorea ETIKETAK tablan datuak sartzerakoan.");
+			System.out.println("Errorea ETIKETAK taulan datuak sartzerakoan.");
 		}
 
 	}
