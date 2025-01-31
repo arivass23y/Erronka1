@@ -12,13 +12,31 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
 
+/**
+ * XMLInportatu klaseak XML fitxategiak datu-basean inportatzeko
+ * funtzionalitatea eskaintzen du. Datuak HERRIAK, PROBINTZIAK, KANPINAK,
+ * ETIKETAK eta KANPIN_ETIKETAK taulatan sartzen dira.
+ */
 public class XML_Inportatu {
 	private static Connection conn;
 
+	/**
+	 * XMLInportatu klasearen eraikitzailea. Datu-basearekin konexioa hasieratzen
+	 * du.
+	 * 
+	 * @throws SQLException Datu-basearekin konektatzeko errore bat gertatuz gero.
+	 */
 	public XML_Inportatu() throws SQLException {
 		conn = DB.konektatu();
 	}
 
+	/**
+	 * XMLtik datuak datu-basera inportatzeko metodo nagusia. Taulaz taula
+	 * inportatzen ditu datuak.
+	 * 
+	 * @throws NumberFormatException Errorea XMLtik datuak parseatzean.
+	 * @throws Exception             Beste errore orokor batzuk.
+	 */
 	public void Inportazioak() throws NumberFormatException, Exception {
 		System.out.println("Datuak inportatzen...");
 
@@ -28,9 +46,12 @@ public class XML_Inportatu {
 		inportatuEtiketak();
 		inportatuKanpinEtiketak();
 
-		System.out.println("Datuak ondo inportatu dira.");
+		System.out.println("Datuak inportatu dira.");
 	}
 
+	/**
+	 * HERRIAK taula inportatzen duen metodoa.
+	 */
 	public void inportatuHerriak() {
 		try {
 			KonfKargatu konfigurazioa = new KonfKargatu();
@@ -69,7 +90,10 @@ public class XML_Inportatu {
 
 	}
 
-	public void inportatuProbintziak() throws NumberFormatException, Exception {
+	/**
+	 * PROBINTZIAK taula inportatzen duen metodoa.
+	 */
+	public void inportatuProbintziak() {
 		try {
 			KonfKargatu konfigurazioa = new KonfKargatu();
 			File file = new File(konfigurazioa.getXML());
@@ -107,6 +131,9 @@ public class XML_Inportatu {
 
 	}
 
+	/**
+	 * KANPINAK taula inportatzen duen metodoa.
+	 */
 	public void inportatuKanpinak() {
 		try {
 			KonfKargatu konfigurazioa = new KonfKargatu();
@@ -157,6 +184,9 @@ public class XML_Inportatu {
 		}
 	}
 
+	/**
+	 * ETIKETAK taula inportatzen duen metodoa.
+	 */
 	public void inportatuEtiketak() {
 		try {
 			KonfKargatu konfigurazioa = new KonfKargatu();
@@ -195,57 +225,9 @@ public class XML_Inportatu {
 
 	}
 
-	public static boolean herriaKonfirmatu(Connection conn, int herriKode) throws Exception {
-		String query = "SELECT COUNT(*) FROM HERRIAK WHERE KODEA = ?";
-		PreparedStatement pstmt = conn.prepareStatement(query);
-		pstmt.setInt(1, herriKode);
-		ResultSet rs = pstmt.executeQuery();
-		boolean exists = false;
-		if (rs.next()) {
-			exists = rs.getInt(1) > 0; // Si hay al menos una coincidencia, el código ya existe
-		}
-		rs.close();
-		pstmt.close();
-		return exists;
-	}
-
-	public static boolean probintziaKonfirmatu(Connection conn, int probintziaKode) throws Exception {
-		String query = "SELECT COUNT(*) FROM PROBINTZIAK WHERE KODEA = ?";
-		PreparedStatement pstmt = conn.prepareStatement(query);
-		pstmt.setInt(1, probintziaKode);
-		ResultSet rs = pstmt.executeQuery();
-		boolean exists = false;
-		if (rs.next()) {
-			exists = rs.getInt(1) > 0; // Si hay al menos una coincidencia, el código ya existe
-		}
-		rs.close();
-		pstmt.close();
-		return exists;
-	}
-
-	public static boolean etiketaKonfirmatu(Connection conn, String etiketa) throws SQLException {
-		String query = "SELECT COUNT(*) FROM ETIKETAK WHERE ETIKETA = ?";
-		PreparedStatement pstmt = conn.prepareStatement(query);
-		pstmt.setString(1, etiketa);
-		ResultSet rs = pstmt.executeQuery();
-		boolean exists = false;
-		if (rs.next()) {
-			exists = rs.getInt(1) > 0;
-		}
-		rs.close();
-		pstmt.close();
-		return exists;
-	}
-
-	// Metodo para comprobar que el nodo no este vacio
-	private String getElementText(Element element, String tagName) {
-		NodeList nodeList = element.getElementsByTagName(tagName);
-		if (nodeList != null && nodeList.getLength() > 0 && nodeList.item(0) != null) {
-			return nodeList.item(0).getTextContent();
-		}
-		return ""; // Retorna una cadena vacía si el nodo no existe
-	}
-
+	/**
+	 * KANPIN_ETIKETAK taula inportatzen duen metodoa.
+	 */
 	public void inportatuKanpinEtiketak() {
 		try {
 			KonfKargatu konfigurazioa = new KonfKargatu();
@@ -271,7 +253,7 @@ public class XML_Inportatu {
 					String etiketaIzena = etiketakList.item(j).getTextContent().trim();
 
 					// Verificar si la etiqueta existe o insertarla si no existe
-					int etiketaId = getOrCreateEtiketa(conn, etiketaIzena);
+					int etiketaId = sortuEtiketa(conn, etiketaIzena);
 
 					// Insertar la relación si no existe
 					if (!kanpinEtiketaKonfirmatu(conn, etiketaId, kanpinKodea)) {
@@ -292,8 +274,97 @@ public class XML_Inportatu {
 		}
 	}
 
-	// Método para obtener el ID de una etiqueta o insertarla si no existe
-	private int getOrCreateEtiketa(Connection conn, String etiketaIzena) throws SQLException {
+	/**
+	 * HERRIAK taulako kodearen egiaztapena.
+	 * 
+	 * @param conn      Datu-basearen konexioa.
+	 * @param herriKode Kodea egiaztatu behar den herriarena.
+	 * @return true baldin eta herria existitzen bada, bestela false.
+	 * @throws Exception SQL erroreak.
+	 */
+	public static boolean herriaKonfirmatu(Connection conn, int herriKode) throws Exception {
+		String query = "SELECT COUNT(*) FROM HERRIAK WHERE KODEA = ?";
+		PreparedStatement pstmt = conn.prepareStatement(query);
+		pstmt.setInt(1, herriKode);
+		ResultSet rs = pstmt.executeQuery();
+		boolean exists = false;
+		if (rs.next()) {
+			exists = rs.getInt(1) > 0; // Gutxienez kointzidentzia bat badago, kodea badago datu-basean
+		}
+		rs.close();
+		pstmt.close();
+		return exists;
+	}
+
+	/**
+	 * PROBINTZIAK taulako kodearen egiaztapena.
+	 * 
+	 * @param conn           Datu-basearen konexioa.
+	 * @param probintziaKode Kodea egiaztatu behar den probintziarena.
+	 * @return true baldin eta probintzia existitzen bada, bestela false.
+	 * @throws Exception SQL erroreak.
+	 */
+	public static boolean probintziaKonfirmatu(Connection conn, int probintziaKode) throws Exception {
+		String query = "SELECT COUNT(*) FROM PROBINTZIAK WHERE KODEA = ?";
+		PreparedStatement pstmt = conn.prepareStatement(query);
+		pstmt.setInt(1, probintziaKode);
+		ResultSet rs = pstmt.executeQuery();
+		boolean exists = false;
+		if (rs.next()) {
+			exists = rs.getInt(1) > 0; // Gutxienez kointzidentzia bat badago, kodea badago datu-basean
+		}
+		rs.close();
+		pstmt.close();
+		return exists;
+	}
+
+	/**
+	 * ETIKETAK taulako etiketa egiaztapena.
+	 * 
+	 * @param conn    Datu-basearen konexioa.
+	 * @param etiketa Etiketa egiaztatu behar den izena.
+	 * @return true baldin eta etiketa existitzen bada, bestela false.
+	 * @throws SQLException SQL erroreak.
+	 */
+	public static boolean etiketaKonfirmatu(Connection conn, String etiketa) throws SQLException {
+		String query = "SELECT COUNT(*) FROM ETIKETAK WHERE ETIKETA = ?";
+		PreparedStatement pstmt = conn.prepareStatement(query);
+		pstmt.setString(1, etiketa);
+		ResultSet rs = pstmt.executeQuery();
+		boolean exists = false;
+		if (rs.next()) {
+			exists = rs.getInt(1) > 0; // Gutxienez kointzidentzia bat badago, kodea badago datu-basean
+		}
+		rs.close();
+		pstmt.close();
+		return exists;
+	}
+
+	/**
+	 * XML-nodo baten testua lortzeko metodoa. Nodoak ez badu baliorik, kate huts
+	 * bat itzuliko du.
+	 * 
+	 * @param element XML elementua.
+	 * @param tagName Egon daitekeen tag izena.
+	 * @return Nodoaren testua edo kate huts bat.
+	 */
+	private String getElementText(Element element, String tagName) {
+		NodeList nodeList = element.getElementsByTagName(tagName);
+		if (nodeList != null && nodeList.getLength() > 0 && nodeList.item(0) != null) {
+			return nodeList.item(0).getTextContent();
+		}
+		return ""; // Nodoa existitzen ez bada, kate huts bat itzultzen da
+	}
+
+	/**
+	 * Etiketa bat sortzeko edo existitzen bada bere ID-a lortzeko metodoa.
+	 * 
+	 * @param conn         Datu-basearen konexioa.
+	 * @param etiketaIzena Etiketa izena.
+	 * @return Etiketaren ID-a.
+	 * @throws SQLException SQL erroreak.
+	 */
+	private int sortuEtiketa(Connection conn, String etiketaIzena) throws SQLException {
 		String querySelect = "SELECT ID FROM ETIKETAK WHERE ETIKETA = ?";
 		PreparedStatement pstmtSelect = conn.prepareStatement(querySelect);
 		pstmtSelect.setString(1, etiketaIzena);
@@ -309,7 +380,7 @@ public class XML_Inportatu {
 		rs.close();
 		pstmtSelect.close();
 
-		// Insertar la etiqueta porque no existe
+		// Etiketa ez badago informazioa txertatxen du.
 		String queryInsert = "INSERT INTO ETIKETAK (ETIKETA) VALUES (?) RETURNING ID";
 		PreparedStatement pstmtInsert = conn.prepareStatement(queryInsert);
 		pstmtInsert.setString(1, etiketaIzena);
@@ -325,7 +396,15 @@ public class XML_Inportatu {
 		return newId;
 	}
 
-	// Método para verificar si la relación ya existe
+	/**
+	 * Kanpin eta etiketa harremana dagoen egiaztatzeko metodoa.
+	 * 
+	 * @param conn        Datu-basearen konexioa.
+	 * @param etiketaId   Etiketa ID-a.
+	 * @param kanpinKodea Kanpin kodea.
+	 * @return true baldin eta harremana existitzen bada, bestela false.
+	 * @throws SQLException SQL erroreak.
+	 */
 	private boolean kanpinEtiketaKonfirmatu(Connection conn, int etiketaId, String kanpinKodea) throws SQLException {
 		String query = "SELECT COUNT(*) FROM KANPIN_ETIKETAK WHERE ID_ETIKETA = ? AND KANPIN_KODEA = ?";
 		PreparedStatement pstmt = conn.prepareStatement(query);

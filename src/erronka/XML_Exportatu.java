@@ -17,15 +17,26 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+/**
+ * Datu-baseko informazioa XML fitxategi batean esportatzen duen klasea.
+ */
 public class XML_Exportatu {
 	private static Connection conn;
 
-	// CON ESTO NOS ASEGURAMOS DE QUE LA CONEXION A LA BASE DE DATOS NUNCA VAYA A
-	// SER NULA
+	/**
+	 * Eraikitzailea. Datu-basearekin konexioa sortzen du.
+	 * 
+	 * @throws SQLException konexio errore bat gertatuz gero.
+	 */
 	public XML_Exportatu() throws SQLException {
 		conn = DB.konektatu();
 	}
 
+	/**
+	 * Datu-baseko informazioa XML formatuan esportatzen du.
+	 * 
+	 * @param probintziaIzena Probintziaren izena esportazioa mugatzeko.
+	 */
 	public void xmlExportazioa(String probintziaIzena) {
 		try {
 			DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -34,10 +45,11 @@ public class XML_Exportatu {
 
 			System.out.println("XML-a exportatzen...");
 
-			// EL TOCHO, LA RAIZ, ES HIJO DE DOC, EL DOCUMENTO, POR ESO ES APPEND CHILD
+			// XML dokumentuaren erro elementua sortzen da.
 			Element raiz = doc.createElement("kanpinak");
 			doc.appendChild(raiz);
 
+			// SQL kontsulta definitzen da probintzia espezifiko baten datuak eskuratzeko.
 			String query = "SELECT K.KODEA, K.IZENA, K.DESKRIBAPENA, K.KATEGORIA, K.EDUKIERA, K.KOKALEKUA, K.HELBIDEA, K.POSTAKODEA, "
 					+ "K.TELEFONOA, K.EMAILA, K.WEBGUNEA, K.FRIENDLY_URL, K.PHYSICAL_URL, K.DATA_XML, K.METADATA_XML, K.ZIP_FILE, "
 					+ "H.IZENA AS HERRIA, H.KODEA AS HERRIKODEA, P.IZENA AS PROBINTZIA, P.KODEA AS PROBINTZIAKODEA, K.KATEGORIA, K.EDUKIERA "
@@ -49,69 +61,63 @@ public class XML_Exportatu {
 			ResultSet rs = pstmt.executeQuery();
 
 			while (rs.next()) {
-				// CREAMOS OTRO ELEMENTO, EN ESTE CASO TIENE ATRIBUTO ID <kanpina id = "x">
+				// Kanpina elementua sortzen da eta erroari gehitzen zaio.
 				Element kanpina = doc.createElement("kanpina");
 				kanpina.setAttribute("id", rs.getString("KODEA"));
 				raiz.appendChild(kanpina);
 
-				// AÑADE ELEMENTOS SIMPLES A <kanpina>
+				// Kanpinaren informazioa gehitzen da.
 				addElementWithText(doc, kanpina, "izena", rs.getString("IZENA"));
 				addElementWithText(doc, kanpina, "deskribapena", rs.getString("DESKRIBAPENA"));
 				addElementWithText(doc, kanpina, "kategoria", rs.getString("KATEGORIA"));
 				addElementWithText(doc, kanpina, "edukiera", String.valueOf(rs.getInt("EDUKIERA")));
 				addElementWithText(doc, kanpina, "kokalekua", rs.getString("KOKALEKUA"));
 
-				// Create <idazlea> node and add it to <liburua>
-				// SE HACE DISTINTO A LOS DE ARRIBA POR NO SER UN ELEMENTO, SI NO UN NODO
+				// Helbidea elementua sortu eta informazioa gehitzen da.
 				Element helbidea = doc.createElement("helbidea");
 				kanpina.appendChild(helbidea);
-
-				// IGUAL QUE LOS DE ARRIBA PERO EN EL NODO IDAZLEA
 				addElementWithText(doc, helbidea, "kalea", rs.getString("HELBIDEA"));
 				addElementWithText(doc, helbidea, "postakodea", rs.getString("POSTAKODEA"));
 
-				// Crear el elemento <herria>
+				// Herria eta probintzia elementuak sortzen dira.
 				Element herria = doc.createElement("herria");
 				herria.setTextContent(rs.getString("HERRIA"));
 				herria.setAttribute("id", rs.getString("HERRIKODEA"));
 				helbidea.appendChild(herria);
 
-				// Crear el elemento <probintzia>
 				Element probintzia = doc.createElement("probintzia");
 				probintzia.setTextContent(rs.getString("PROBINTZIA"));
 				probintzia.setAttribute("id", rs.getString("PROBINTZIAKODEA"));
 				helbidea.appendChild(probintzia);
 
+				// Beste informazioa gehitzen da.
 				addElementWithText(doc, kanpina, "telefonoa", rs.getString("TELEFONOA"));
 				addElementWithText(doc, kanpina, "emaila", rs.getString("EMAILA"));
 				addElementWithText(doc, kanpina, "webgunea", rs.getString("WEBGUNEA"));
-
-				// Create <idazlea> node and add it to <liburua>
-				// SE HACE DISTINTO A LOS DE ARRIBA POR NO SER UN ELEMENTO, SI NO UN NODO
+				
+				// estekak elementua sortzen dugu
 				Element estekak = doc.createElement("estekak");
 				kanpina.appendChild(estekak);
 
-				// IGUAL QUE LOS DE ARRIBA PERO EN EL NODO IDAZLEA
+				// Elementuak sartzen dugu estekak nodoan
 				addElementWithText(doc, estekak, "friendly", rs.getString("FRIENDLY_URL"));
 				addElementWithText(doc, estekak, "physical", rs.getString("PHYSICAL_URL"));
 
-				// Create <idazlea> node and add it to <liburua>
-				// SE HACE DISTINTO A LOS DE ARRIBA POR NO SER UN ELEMENTO, SI NO UN NODO
+				// Beste elementu nodo bat sortzen dugu, kasu honetan fitxategiak
 				Element fitxategiak = doc.createElement("fitxategiak");
 				kanpina.appendChild(fitxategiak);
 
-				// IGUAL QUE LOS DE ARRIBA PERO EN EL NODO IDAZLEA
+				// Faltatzen diren elementuak sartzen dugu fitxategiak nodoan
 				addElementWithText(doc, fitxategiak, "dataXML", rs.getString("DATA_XML"));
 				addElementWithText(doc, fitxategiak, "metadataXML", rs.getString("METADATA_XML"));
 				addElementWithText(doc, fitxategiak, "zipFile", rs.getString("ZIP_FILE"));
 			}
 
+			// XML fitxategia sortzen da.
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();
 			DOMSource source = new DOMSource(doc);
 			StreamResult result = new StreamResult(new File("sortutako_fitx\\XML_Exportazioa.xml"));
-
-			// Linea magica
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			transformer.transform(source, result);
 
@@ -120,17 +126,23 @@ public class XML_Exportatu {
 			rs.close();
 			pstmt.close();
 			conn.close();
-
 		} catch (Exception e) {
 			System.out.println("Errorea XML-a exportatzerakoan: " + e);
 			e.printStackTrace();
 		}
 	}
 
-	// PARA AÑADIR DIRECTAMENTE EL ELEMENTO DENTRO DE UN NODO, CON TEXTO Y TODO
+	/**
+	 * Elementu berri bat sortu eta testuarekin gehitzen du.
+	 * 
+	 * @param doc         Dokumentua.
+	 * @param parent      Guraso elementua.
+	 * @param tagName     Elementuaren izena.
+	 * @param textContent Elementuaren edukia.
+	 */
 	private static void addElementWithText(Document doc, Element parent, String tagName, String textContent) {
 		Element element = doc.createElement(tagName);
 		element.setTextContent(textContent);
-		parent.appendChild(element); // Atributu gurasoari gehitzen zaio
+		parent.appendChild(element);
 	}
 }
